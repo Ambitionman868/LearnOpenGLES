@@ -1,4 +1,4 @@
-package com.opengles;
+package com.opengles.renderer;
 
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
