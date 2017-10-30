@@ -3,6 +3,7 @@ package com.opengles.renderer;
 import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.opengl.Matrix;
 
 import com.opengles.R;
 import com.opengles.util.LoggerConfig;
@@ -23,6 +24,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class AirHockey2Renderer implements GLSurfaceView.Renderer {
 
+    private static final String U_MATRIX = "u_Matrix";
     private static final String A_POSITION = "a_Position";
     private static final String A_COLOR = "a_Color";
     //
@@ -38,6 +40,10 @@ public class AirHockey2Renderer implements GLSurfaceView.Renderer {
     private int program;
     private int aPositionLocation;
     private int aColorLocation;
+    //顶点数组存储矩阵
+    private final float[] projectionMatrix = new float[16];
+    //存储矩阵的uniform位置
+    private int uMatrixLocation;
 
     //在OpenGL里只能 绘制点，直线，以及三角形
 
@@ -132,6 +138,7 @@ public class AirHockey2Renderer implements GLSurfaceView.Renderer {
         //使能顶点数组
         GLES20.glEnableVertexAttribArray(aColorLocation);
 
+        uMatrixLocation = GLES20.glGetUniformLocation(program, U_MATRIX);
 
     }
 
@@ -139,6 +146,18 @@ public class AirHockey2Renderer implements GLSurfaceView.Renderer {
     public void onSurfaceChanged(GL10 gl10, int width, int height) {
         //设置视图尺寸
         GLES20.glViewport(0, 0, width, height);
+
+        //创建正交投影矩阵
+        final float aspectRatio = width > height ? (float) width / (float) height : (float) height / (float) width;
+        Matrix matrix = new Matrix();
+        if (width > height) {
+            matrix.orthoM(projectionMatrix, 0, -aspectRatio, aspectRatio, -1f, 1f, -1f, 1f);
+        } else {
+            matrix.orthoM(projectionMatrix, 0, -1f, 1f, -aspectRatio, aspectRatio, 1f, -1f);
+        }
+        GLES20.glUniformMatrix4fv(uMatrixLocation, 1, false, projectionMatrix, 0);
+
+
     }
 
     @Override
