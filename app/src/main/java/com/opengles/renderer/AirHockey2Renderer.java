@@ -23,44 +23,49 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class AirHockey2Renderer implements GLSurfaceView.Renderer {
 
-    private static final String U_COLOR = "u_Color";
-    private int uColorLocation;
-
     private static final String A_POSITION = "a_Position";
-    private int aPositionLocation;
+    private static final String A_COLOR = "a_Color";
     //
     private static final int POSITION_COMPONENT_COUNT = 2;
+    private static final int COLOR_COMPONENT_COUNT = 3;
     private static final int BYTES_PER_FLOAT = 4;
-
-    private final Context mContext;
-    private int program;
-    //在OpenGL里只能 绘制点，直线，以及三角形
+    //跨距
+    private static final int STRIDE = (POSITION_COMPONENT_COUNT + COLOR_COMPONENT_COUNT) * BYTES_PER_FLOAT;
 
     private final FloatBuffer vertexData;
+    private final Context mContext;
+
+    private int program;
+    private int aPositionLocation;
+    private int aColorLocation;
+
+    //在OpenGL里只能 绘制点，直线，以及三角形
 
 
     public AirHockey2Renderer(Context context) {
         mContext = context;
         //定义三角形是以逆时针顺序排列顶点，称为卷曲顺序
+        /*float[] tableVerticesWithTriangles = {
+                //Triangle 1
+                0f, 0f,
+                9f, 14f,
+                0f, 14f,
+
+                //Triangle 2
+                0f, 0f,
+                9f, 0f,
+                9f, 14f,
+
+                //Line 1
+                0f, 7f,
+                9f, 7f,
+
+                // Mallets  木槌
+                4.5f, 2f,
+                4.5f, 12f
+        };*/
 
         float[] tableVerticesWithTriangles = {
-                // Triangle Fan
-                0,     0,
-                -0.5f, -0.5f,
-                0.5f, -0.5f,
-                0.5f,  0.5f,
-                -0.5f,  0.5f,
-                -0.5f, -0.5f,
-
-                // Line 1
-                -0.5f, 0f,
-                0.5f, 0f,
-
-                // Mallets
-                0f, -0.25f,
-                0f,  0.25f
-        };
-        /*float[] tableVerticesWithTriangles = {
 
                 //order of x,y,r,g,b
 
@@ -71,16 +76,16 @@ public class AirHockey2Renderer implements GLSurfaceView.Renderer {
                 0.5f, -0.5f, 0.7f, 0.7f, 0.7f,
                 0.5f, 0.5f, 0.7f, 0.7f, 0.7f,
                 -0.5f, 0.5f, 0.7f, 0.7f, 0.7f,
-                -0.5f, -0.5f, 0.7f, 0.7f, 0.7f
+                -0.5f, -0.5f, 0.7f, 0.7f, 0.7f,
 
                 //Line 1
-                - 0.5f, 0f, 1f, 0f, 0f,
+                -0.5f, 0f, 1f, 0f, 0f,
                 0.5f, 0f, 1f, 0f, 0f,
 
                 // Mallets  木槌
                 0f, -0.25f, 0f, 0f, 1f,
                 0f, 0.25f, 1f, 0f, 0f
-        };*/
+        };
 
 
         vertexData = ByteBuffer
@@ -110,15 +115,22 @@ public class AirHockey2Renderer implements GLSurfaceView.Renderer {
         }
         GLES20.glUseProgram(program);
         //获取uniform的位置并存入uColorLocation
-        uColorLocation = GLES20.glGetUniformLocation(program, U_COLOR);
+        aColorLocation = GLES20.glGetAttribLocation(program, A_COLOR);
         //获取属性位置
         aPositionLocation = GLES20.glGetAttribLocation(program, A_POSITION);
 
         //关联属性与顶点数据的数组
         vertexData.position(0);
-        GLES20.glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, vertexData);
-        //使能顶点数组
+        GLES20.glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, STRIDE, vertexData);
         GLES20.glEnableVertexAttribArray(aPositionLocation);
+
+
+        //当OpenGL读取颜色属性，从它的第一个颜色属性开始
+        vertexData.position(POSITION_COMPONENT_COUNT);
+        //把颜色数据和着色器中的a_Color关联起来
+        GLES20.glVertexAttribPointer(aColorLocation, COLOR_COMPONENT_COUNT, GLES20.GL_FLOAT, false, STRIDE, vertexData);
+        //使能顶点数组
+        GLES20.glEnableVertexAttribArray(aColorLocation);
 
 
     }
@@ -135,17 +147,13 @@ public class AirHockey2Renderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         //指定颜色值  4个分量RGBA
-        GLES20.glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
         //参数： 图形形状，顶点开头处，顶点数（2个三角形有6个顶点）
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, 6);
         //绘制分割线
-        GLES20.glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f);
         GLES20.glDrawArrays(GLES20.GL_LINES, 6, 2);
         //绘制木槌的点
-        GLES20.glUniform4f(uColorLocation, 0.0f, 0.0f, 1.0f, 1.0f);
         GLES20.glDrawArrays(GLES20.GL_POINTS, 8, 1);
 
-        GLES20.glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f);
         GLES20.glDrawArrays(GLES20.GL_POINTS, 9, 1);
 
 

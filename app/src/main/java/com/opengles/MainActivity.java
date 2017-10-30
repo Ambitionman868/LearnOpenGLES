@@ -11,6 +11,7 @@ import android.widget.Toast;
 import com.opengles.renderer.AirHockey2Renderer;
 import com.opengles.renderer.AirHockeyRenderer;
 import com.opengles.renderer.FirstOpenGLProjectRenderer;
+import com.opengles.renderer.TestRenderer;
 
 public class MainActivity extends AppCompatActivity {
 
